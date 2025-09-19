@@ -3,7 +3,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/material.dart' show Icons;
 import 'package:get/get.dart';
 import 'package:reboot_launcher/src/util/translations.dart';
-import 'package:reboot_launcher/src/messenger/dialog.dart';
+import 'package:reboot_launcher/src/widget/overlay/dialog.dart';
 
 Future<bool> showProfileForm(BuildContext context, TextEditingController username, TextEditingController password) async{
   final showPassword = RxBool(false);

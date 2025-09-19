@@ -9,8 +9,8 @@ import 'package:reboot_launcher/src/controller/game_controller.dart';
 import 'package:reboot_launcher/src/util/extensions.dart';
 import 'package:reboot_launcher/src/util/os.dart';
 import 'package:reboot_launcher/src/util/translations.dart';
-import 'package:reboot_launcher/src/button/file_selector.dart';
-import 'package:reboot_launcher/src/messenger/dialog.dart';
+import 'package:reboot_launcher/src/widget/file_selector.dart';
+import 'package:reboot_launcher/src/widget/overlay/dialog.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 

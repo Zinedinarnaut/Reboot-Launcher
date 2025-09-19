@@ -1,8 +1,8 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:reboot_common/common.dart';
 import 'package:reboot_launcher/src/util/translations.dart';
-import 'package:reboot_launcher/src/messenger/dialog.dart';
-import 'package:reboot_launcher/src/page/pages.dart';
+import 'package:reboot_launcher/src/widget/overlay/dialog.dart';
+import 'package:reboot_launcher/src/widget/sections.dart';
 
 String? lastError;
 

@@ -17,7 +17,7 @@ String? _lastPort;
 
 typedef BackendErrorHandler = void Function(String);
 
-Stream<AuthBackendResult> startAuthBackend({
+Stream<AuthBackendEvent> startAuthBackend({
   required AuthBackendType type,
   required String host,
   required String port,
@@ -30,80 +30,80 @@ Stream<AuthBackendResult> startAuthBackend({
     host = host.trim();
     port = port.trim();
     if(type != AuthBackendType.local || port != kDefaultBackendPort.toString()) {
-      yield AuthBackendResult(AuthBackendResultType.starting);
+      yield AuthBackendEvent(AuthBackendEventType.starting);
     }
 
     if (host.isEmpty) {
-      yield AuthBackendResult(AuthBackendResultType.startMissingHostError);
+      yield AuthBackendEvent(AuthBackendEventType.startMissingHostError);
       return;
     }
 
     if (port.isEmpty) {
-      yield AuthBackendResult(AuthBackendResultType.startMissingPortError);
+      yield AuthBackendEvent(AuthBackendEventType.startMissingPortError);
       return;
     }
 
     final portNumber = int.tryParse(port);
     if (portNumber == null) {
-      yield AuthBackendResult(AuthBackendResultType.startIllegalPortError);
+      yield AuthBackendEvent(AuthBackendEventType.startIllegalPortError);
       return;
     }
 
     if ((type != AuthBackendType.local || port != kDefaultBackendPort.toString()) && !(await isAuthBackendPortFree())) {
-      yield AuthBackendResult(AuthBackendResultType.startFreeingPort);
+      yield AuthBackendEvent(AuthBackendEventType.startFreeingPort);
       final result = await freeAuthBackendPort();
       if(!result) {
-        yield AuthBackendResult(AuthBackendResultType.startFreePortError);
+        yield AuthBackendEvent(AuthBackendEventType.startFreePortError);
         return;
       }
 
-      yield AuthBackendResult(AuthBackendResultType.startFreePortSuccess);
+      yield AuthBackendEvent(AuthBackendEventType.startFreePortSuccess);
     }
 
     switch(type){
       case AuthBackendType.embedded:
         process = await _startEmbedded(detached, onError: onError);
-        yield AuthBackendResult(AuthBackendResultType.startedImplementation, implementation: AuthBackendImplementation(process: process));
+        yield AuthBackendEvent(AuthBackendEventType.startedImplementation, implementation: AuthBackendImplementation(process: process));
         break;
       case AuthBackendType.remote:
-        yield AuthBackendResult(AuthBackendResultType.startPingingRemote);
+        yield AuthBackendEvent(AuthBackendEventType.startPingingRemote);
         final uriResult = await _ping(host, portNumber);
         if(uriResult == null) {
-          yield AuthBackendResult(AuthBackendResultType.startPingError);
+          yield AuthBackendEvent(AuthBackendEventType.startPingError);
           return;
         }
 
         server = await _startRemote(uriResult);
-        yield AuthBackendResult(AuthBackendResultType.startedImplementation, implementation: AuthBackendImplementation(server: server));
+        yield AuthBackendEvent(AuthBackendEventType.startedImplementation, implementation: AuthBackendImplementation(server: server));
         break;
       case AuthBackendType.local:
         if(portNumber != kDefaultBackendPort) {
-          yield AuthBackendResult(AuthBackendResultType.startPingingLocal);
+          yield AuthBackendEvent(AuthBackendEventType.startPingingLocal);
           final uriResult = await _ping(kDefaultBackendHost, portNumber);
           if(uriResult == null) {
-            yield AuthBackendResult(AuthBackendResultType.startPingError);
+            yield AuthBackendEvent(AuthBackendEventType.startPingError);
             return;
           }
 
           server = await _startRemote(Uri.parse("http://$kDefaultBackendHost:$port"));
-          yield AuthBackendResult(AuthBackendResultType.startedImplementation, implementation: AuthBackendImplementation(server: server));
+          yield AuthBackendEvent(AuthBackendEventType.startedImplementation, implementation: AuthBackendImplementation(server: server));
         }
         break;
     }
 
-    yield AuthBackendResult(AuthBackendResultType.startPingingLocal);
+    yield AuthBackendEvent(AuthBackendEventType.startPingingLocal);
     final uriResult = await _ping(kDefaultBackendHost, kDefaultBackendPort);
     if(uriResult == null) {
-      yield AuthBackendResult(AuthBackendResultType.startPingError);
+      yield AuthBackendEvent(AuthBackendEventType.startPingError);
       process?.kill(ProcessSignal.sigterm);
       server?.close(force: true);
       return;
     }
 
-    yield AuthBackendResult(AuthBackendResultType.startSuccess);
+    yield AuthBackendEvent(AuthBackendEventType.startSuccess);
   }catch(error, stackTrace) {
-    yield AuthBackendResult(
-        AuthBackendResultType.startError,
+    yield AuthBackendEvent(
+        AuthBackendEventType.startError,
         error: error,
         stackTrace: stackTrace
     );
@@ -141,8 +141,8 @@ Future<Process> _startEmbedded(bool detached, {BackendErrorHandler? onError}) as
 
 Future<HttpServer> _startRemote(Uri uri) async => await serve(proxyHandler(uri), kDefaultBackendHost, kDefaultBackendPort);
 
-Stream<AuthBackendResult> stopAuthBackend({required AuthBackendType type, required AuthBackendImplementation? implementation}) async* {
-  yield AuthBackendResult(AuthBackendResultType.stopping);
+Stream<AuthBackendEvent> stopAuthBackend({required AuthBackendType type, required AuthBackendImplementation? implementation}) async* {
+  yield AuthBackendEvent(AuthBackendEventType.stopping);
   try{
     switch(type){
       case AuthBackendType.embedded:
@@ -158,10 +158,10 @@ Stream<AuthBackendResult> stopAuthBackend({required AuthBackendType type, requir
         await implementation?.server?.close(force: true);
         break;
     }
-    yield AuthBackendResult(AuthBackendResultType.stopSuccess);
+    yield AuthBackendEvent(AuthBackendEventType.stopSuccess);
   }catch(error, stackTrace){
-    yield AuthBackendResult(
-        AuthBackendResultType.stopError,
+    yield AuthBackendEvent(
+        AuthBackendEventType.stopError,
         error: error,
         stackTrace: stackTrace
     );

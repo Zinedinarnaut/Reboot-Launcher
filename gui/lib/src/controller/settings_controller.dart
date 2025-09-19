@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:reboot_common/common.dart';
 import 'package:reboot_launcher/main.dart';
 import 'package:reboot_launcher/src/util/translations.dart';
-import 'package:reboot_launcher/src/messenger/info_bar.dart';
+import 'package:reboot_launcher/src/widget/snackbar/snackbar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:version/version.dart';
 import 'package:yaml/yaml.dart';

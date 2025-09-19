@@ -7,8 +7,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:path/path.dart';
 import 'package:reboot_common/common.dart';
 import 'package:reboot_launcher/main.dart';
-import 'package:reboot_launcher/src/messenger/info_bar.dart';
-import 'package:reboot_launcher/src/page/settings_page.dart';
+import 'package:reboot_launcher/src/widget/snackbar/snackbar.dart';
+import 'package:reboot_launcher/src/widget/page/settings/page.dart';
 import 'package:reboot_launcher/src/util/translations.dart';
 import 'package:version/version.dart';
 import 'package:path/path.dart' as path;
@@ -75,7 +75,7 @@ class DllController extends GetxController {
   }
 
   Future<bool> updateGameServerDll({bool force = false, bool silent = false}) async {
-    InfoBarEntry? infoBarEntry;
+    SnackBar? SnackBar;
     try {
       if(customGameServer.value) {
         status.value = UpdateStatus.success;
@@ -94,7 +94,7 @@ class DllController extends GetxController {
       }
 
       if(!silent) {
-        infoBarEntry = showRebootInfoBar(
+        SnackBar = SnackBar.open(
             translations.downloadingDll("reboot"),
             loading: true,
             duration: null
@@ -111,19 +111,19 @@ class DllController extends GetxController {
       ).then((values) => values.reduce((first, second) => first && second));
       if(!result) {
         status.value = UpdateStatus.error;
-        showRebootInfoBar(
+        SnackBar.open(
             translations.downloadDllAntivirus(antiVirusName ?? defaultAntiVirusName, "reboot"),
             duration: infoBarLongDuration,
             severity: InfoBarSeverity.error
         );
-        infoBarEntry?.close();
+        SnackBar?.close();
         return false;
       }
       timestamp.value = DateTime.now().millisecondsSinceEpoch;
       status.value = UpdateStatus.success;
-      infoBarEntry?.close();
+      SnackBar?.close();
       if(!silent) {
-        infoBarEntry = showRebootInfoBar(
+        SnackBar = SnackBar.open(
             translations.downloadDllSuccess("reboot"),
             severity: InfoBarSeverity.success,
             duration: infoBarShortDuration
@@ -132,20 +132,20 @@ class DllController extends GetxController {
       _listenToFileEvents(GameDll.gameServer);
       return true;
     }catch(message) {
-      infoBarEntry?.close();
+      SnackBar?.close();
       var error = message.toString();
       error = error.contains(": ") ? error.substring(error.indexOf(": ") + 2) : error;
       error = error.toLowerCase();
       status.value = UpdateStatus.error;
       final completer = Completer<bool>();
-      infoBarEntry = showRebootInfoBar(
+      SnackBar = SnackBar.open(
           translations.downloadDllError(error.toString(), "reboot.dll"),
           duration: infoBarLongDuration,
           severity: InfoBarSeverity.error,
           onDismissed: () => completer.complete(false),
           action: Button(
             onPressed: () async {
-              infoBarEntry?.close();
+              SnackBar?.close();
               final result = updateGameServerDll(
                   force: true,
                   silent: silent
@@ -216,7 +216,7 @@ class DllController extends GetxController {
 
   Future<bool> download(GameDll dll, String filePath, {bool silent = false, bool force = false}) async {
     log("[DLL] Asking for $dll at $filePath(silent: $silent, force: $force)");
-    InfoBarEntry? entry;
+    SnackBar? entry;
     try {
       if (dll == GameDll.gameServer) {
         return await updateGameServerDll(silent: silent);
@@ -232,7 +232,7 @@ class DllController extends GetxController {
       final fileNameWithoutExtension = basenameWithoutExtension(filePath);
       if(!silent) {
         log("[DLL] Showing dialog while downloading $dll...");
-        entry = showRebootInfoBar(
+        entry = SnackBar.open(
             translations.downloadingDll(fileNameWithoutExtension),
             loading: true,
             duration: null
@@ -243,7 +243,7 @@ class DllController extends GetxController {
       final result = await downloadDependency(dll, filePath);
       if(!result) {
         entry?.close();
-        showRebootInfoBar(
+        SnackBar.open(
             translations.downloadDllAntivirus(antiVirusName ?? defaultAntiVirusName, dll.name),
             duration: infoBarLongDuration,
             severity: InfoBarSeverity.error
@@ -254,7 +254,7 @@ class DllController extends GetxController {
       entry?.close();
       if(!silent) {
         log("[DLL] Showing success dialog for $dll");
-        entry = await showRebootInfoBar(
+        entry = await SnackBar.open(
             translations.downloadDllSuccess(fileNameWithoutExtension),
             severity: InfoBarSeverity.success,
             duration: infoBarShortDuration
@@ -271,7 +271,7 @@ class DllController extends GetxController {
       error = error.contains(": ") ? error.substring(error.indexOf(": ") + 2) : error;
       error = error.toLowerCase();
       final completer = Completer<bool>();
-      await showRebootInfoBar(
+      await SnackBar.open(
           translations.downloadDllError(error.toString(), dll.name),
           duration: infoBarLongDuration,
           severity: InfoBarSeverity.error,
@@ -317,7 +317,7 @@ class DllController extends GetxController {
             .instance
             .value
             ?.kill();
-        showRebootInfoBar(
+        SnackBar.open(
             translations.downloadDllAntivirus(antiVirusName ?? defaultAntiVirusName, injectable.name),
             duration: infoBarLongDuration,
             severity: InfoBarSeverity.error

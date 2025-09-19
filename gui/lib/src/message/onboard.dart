@@ -5,16 +5,16 @@ import 'package:reboot_launcher/src/controller/backend_controller.dart';
 import 'package:reboot_launcher/src/controller/game_controller.dart';
 import 'package:reboot_launcher/src/controller/hosting_controller.dart';
 import 'package:reboot_launcher/src/controller/settings_controller.dart';
-import 'package:reboot_launcher/src/pager/page_type.dart';
+import 'package:reboot_launcher/src/widget/page/page_type.dart';
 import 'package:reboot_launcher/src/util/translations.dart';
 import 'package:reboot_launcher/src/message/profile.dart';
-import 'package:reboot_launcher/src/messenger/overlay.dart';
-import 'package:reboot_launcher/src/page/backend_page.dart';
-import 'package:reboot_launcher/src/pager/pager.dart';
-import 'package:reboot_launcher/src/page/host_page.dart';
-import 'package:reboot_launcher/src/page/pages.dart';
-import 'package:reboot_launcher/src/page/play_page.dart';
-import 'package:reboot_launcher/src/button/version_selector.dart';
+import 'package:reboot_launcher/src/widget/tutorial/tutorial_overlay.dart';
+import 'package:reboot_launcher/src/widget/section/backend/page.dart';
+import 'package:reboot_launcher/src/widget/page/pager.dart';
+import 'package:reboot_launcher/src/widget/page/host/page.dart';
+import 'package:reboot_launcher/src/widget/sections.dart';
+import 'package:reboot_launcher/src/widget/section/play/page.dart';
+import 'package:reboot_launcher/src/widget/version_selector.dart';
 
 void startOnboarding() {
   final gameController = Get.find<GameController>();

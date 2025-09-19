@@ -53,7 +53,9 @@ String _sanitize(String value) {
 }
 
 List<String> _getArguments(List<String>? arguments) {
-  if (arguments == null) return ['%s'];
+  if (arguments == null) {
+    return ['%s'];
+  }
 
   if (arguments.isEmpty && !arguments.any((e) => e.contains('%s'))) {
     throw ArgumentError('arguments must contain at least 1 instance of "%s"');

@@ -1,12 +1,12 @@
 import 'dart:io';
 
-class AuthBackendResult {
-  final AuthBackendResultType type;
+class AuthBackendEvent {
+  final AuthBackendEventType type;
   final AuthBackendImplementation? implementation;
   final Object? error;
   final StackTrace? stackTrace;
 
-  AuthBackendResult(this.type, {this.implementation, this.error, this.stackTrace});
+  AuthBackendEvent(this.type, {this.implementation, this.error, this.stackTrace});
 
   @override
   String toString() {
@@ -14,14 +14,7 @@ class AuthBackendResult {
   }
 }
 
-class AuthBackendImplementation {
-  final Process? process;
-  final HttpServer? server;
-
-  AuthBackendImplementation({this.process, this.server});
-}
-
-enum AuthBackendResultType {
+enum AuthBackendEventType {
   starting,
   startMissingHostError,
   startMissingPortError,
@@ -43,5 +36,12 @@ enum AuthBackendResultType {
 
   bool get isError => name.endsWith("Error");
 
-  bool get isSuccess => this == AuthBackendResultType.startSuccess || this == AuthBackendResultType.stopSuccess;
+  bool get isSuccess => this == AuthBackendEventType.startSuccess || this == AuthBackendEventType.stopSuccess;
+}
+
+class AuthBackendImplementation {
+  final Process? process;
+  final HttpServer? server;
+
+  AuthBackendImplementation({this.process, this.server});
 }

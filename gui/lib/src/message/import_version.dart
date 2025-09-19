@@ -6,8 +6,8 @@ import 'package:path/path.dart' as path;
 import 'package:reboot_common/common.dart';
 import 'package:reboot_launcher/src/controller/game_controller.dart';
 import 'package:reboot_launcher/src/util/translations.dart';
-import 'package:reboot_launcher/src/button/file_selector.dart';
-import 'package:reboot_launcher/src/messenger/dialog.dart';
+import 'package:reboot_launcher/src/widget/file_selector.dart';
+import 'package:reboot_launcher/src/widget/overlay/dialog.dart';
 import 'package:version/version.dart';
 
 class ImportVersionDialog extends StatefulWidget {

@@ -8,9 +8,9 @@ import 'package:get_storage/get_storage.dart';
 import 'package:reboot_common/common.dart';
 import 'package:reboot_launcher/main.dart';
 import 'package:reboot_launcher/src/util/keyboard.dart';
-import 'package:reboot_launcher/src/messenger/info_bar.dart';
+import 'package:reboot_launcher/src/widget/snackbar/snackbar.dart';
 
-typedef BackendInteractiveEventHandler = InfoBarEntry? Function(AuthBackendType, AuthBackendResult);
+typedef BackendInteractiveEventHandler = SnackBar? Function(AuthBackendType, AuthBackendEvent);
 
 class BackendController extends GetxController {
   static const String storageName = "v3_backend_storage";
@@ -27,7 +27,7 @@ class BackendController extends GetxController {
   late final RxBool detached;
   AuthBackendImplementation? implementation;
   StreamSubscription? _worker;
-  InfoBarEntry? _interactiveEntry;
+  SnackBar? _interactiveEntry;
 
   BackendController() {
     _storage = appWithNoStorage ? null : GetStorage(storageName);
