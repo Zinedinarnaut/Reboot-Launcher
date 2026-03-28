@@ -145,6 +145,54 @@ function getItemShop() {
         }
     } catch (err) {}
 
+    // Fallback for old builds: if daily/weekly storefronts are empty, clone BR entries
+    // from season storefront so the client does not render placeholder cards.
+    try {
+        const dailyStorefront = catalog.storefronts.find((storefront) => storefront.name == "BRDailyStorefront");
+        const weeklyStorefront = catalog.storefronts.find((storefront) => storefront.name == "BRWeeklyStorefront");
+        const seasonStorefront = catalog.storefronts.find((storefront) => storefront.name == "BRSeasonStorefront");
+
+        const seasonEntries = Array.isArray(seasonStorefront && seasonStorefront.catalogEntries)
+            ? seasonStorefront.catalogEntries.filter((entry) => {
+                if (!entry || !Array.isArray(entry.itemGrants) || entry.itemGrants.length === 0) return false;
+                const firstGrant = entry.itemGrants[0] && entry.itemGrants[0].templateId ? entry.itemGrants[0].templateId : "";
+                return firstGrant.toLowerCase().startsWith("athena");
+            })
+            : [];
+
+        if (dailyStorefront && Array.isArray(dailyStorefront.catalogEntries) && dailyStorefront.catalogEntries.length === 0) {
+            dailyStorefront.catalogEntries = seasonEntries.slice(0, 6).map((entry, index) => {
+                const clone = JSON.parse(JSON.stringify(entry));
+                if (!clone.meta) clone.meta = {};
+                if (!Array.isArray(clone.metaInfo)) clone.metaInfo = [];
+                clone.meta.SectionId = "Daily";
+                clone.meta.TileSize = "Small";
+                clone.metaInfo = [
+                    { key: "SectionId", value: "Daily" },
+                    { key: "TileSize", value: "Small" }
+                ];
+                clone.sortPriority = -(index + 1);
+                return clone;
+            });
+        }
+
+        if (weeklyStorefront && Array.isArray(weeklyStorefront.catalogEntries) && weeklyStorefront.catalogEntries.length === 0) {
+            weeklyStorefront.catalogEntries = seasonEntries.slice(0, 2).map((entry, index) => {
+                const clone = JSON.parse(JSON.stringify(entry));
+                if (!clone.meta) clone.meta = {};
+                if (!Array.isArray(clone.metaInfo)) clone.metaInfo = [];
+                clone.meta.SectionId = "Featured";
+                clone.meta.TileSize = "Normal";
+                clone.metaInfo = [
+                    { key: "SectionId", value: "Featured" },
+                    { key: "TileSize", value: "Normal" }
+                ];
+                clone.sortPriority = -(index + 1);
+                return clone;
+            });
+        }
+    } catch (err) {}
+
     return catalog;
 }
 
