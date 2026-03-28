@@ -1,6 +1,7 @@
 const WebSocket = require("ws").Server;
 const XMLBuilder = require("xmlbuilder");
 const XMLParser = require("xml-parser");
+const { URL } = require("url");
 
 const functions = require("./../structure/functions.js");
 const matchmaker = require("./matchmaker.js");
@@ -15,10 +16,61 @@ wss.on("error", (err) => {
 
 global.Clients = [];
 
-wss.on('connection', async (ws) => {
+wss.on('connection', async (ws, req) => {
     ws.on('error', () => {});
 
-    if (ws.protocol.toLowerCase() != "xmpp") return matchmaker(ws);
+    const protocol = (ws.protocol || "").toLowerCase();
+    const requestPath = (((req && req.url) || "/").split("?")[0] || "/").toLowerCase();
+    const isMatchmakingPath = requestPath.startsWith("/matchmaking");
+
+    if (isMatchmakingPath || (protocol && protocol !== "xmpp")) {
+        const mode = requestPath.startsWith("/matchmaking/stw") ? "STW" : "BR";
+        const host = (req && req.headers && req.headers.host) || "127.0.0.1";
+        let accountId = "";
+        let partyPlayerIds = [];
+        let bucketId = "";
+        let missionId = "";
+        let zoneName = "";
+        let theaterId = "";
+        let difficulty = "";
+
+        try {
+            const parsedUrl = new URL(`ws://${host}${req.url || "/"}`);
+            accountId = (parsedUrl.searchParams.get("playerId") || parsedUrl.searchParams.get("accountId") || "").trim();
+            bucketId = (parsedUrl.searchParams.get("bucketId") || "").trim();
+            missionId = (parsedUrl.searchParams.get("missionId") || "").trim();
+            zoneName = (parsedUrl.searchParams.get("zoneName") || "").trim();
+            theaterId = (parsedUrl.searchParams.get("theaterId") || "").trim();
+            difficulty = (parsedUrl.searchParams.get("difficulty") || "").trim();
+            partyPlayerIds = (parsedUrl.searchParams.get("partyPlayerIds") || "")
+                .split(",")
+                .map((entry) => entry.trim())
+                .filter(Boolean);
+        } catch (err) {}
+
+        const cookieValues = parseCookies((req && req.headers && req.headers.cookie) || "");
+        if (!accountId && cookieValues.currentMatchmakingAccountId) {
+            accountId = cookieValues.currentMatchmakingAccountId;
+        }
+        if (partyPlayerIds.length === 0 && cookieValues.currentMatchmakingPartyIds) {
+            partyPlayerIds = cookieValues.currentMatchmakingPartyIds
+                .split(",")
+                .map((entry) => entry.trim())
+                .filter(Boolean);
+        }
+
+        return matchmaker(ws, {
+            mode: mode,
+            accountId: accountId,
+            partyPlayerIds: partyPlayerIds,
+            bucketId: bucketId,
+            missionId: missionId,
+            zoneName: zoneName,
+            theaterId: theaterId,
+            difficulty: difficulty,
+            requestPath: requestPath
+        });
+    }
 
     var accountId = "";
     var jid = "";
@@ -28,8 +80,16 @@ wss.on('connection', async (ws) => {
 
     ws.on('message', async (message) => {
         if (Buffer.isBuffer(message)) message = message.toString();
-        const msg = XMLParser(message);
-        if (!msg.root) return Error(ws);
+        if (typeof message !== "string") return;
+        if (!message.trim()) return;
+
+        let msg = null;
+        try {
+            msg = XMLParser(message);
+        } catch (err) {
+            return;
+        }
+        if (!msg.root) return;
 
         switch (msg.root.name) {
             case "open":
@@ -65,8 +125,6 @@ wss.on('connection', async (ws) => {
                 if (!functions.DecodeBase64(msg.root.content)) return Error(ws);
                 if (!functions.DecodeBase64(msg.root.content).includes("\u0000")) return Error(ws);
                 var decodedBase64 = functions.DecodeBase64(msg.root.content).split("\u0000");
-
-                if (global.Clients.find(i => i.accountId == decodedBase64[1])) return Error(ws);
 
                 accountId = decodedBase64[1];
 
@@ -263,6 +321,22 @@ function getPresenceFromAll(ws) {
     } else {
         return Error(ws);
     }
+}
+
+function parseCookies(cookieHeader = "") {
+    const parsed = {};
+    if (!cookieHeader || typeof cookieHeader !== "string") return parsed;
+
+    cookieHeader.split(";").forEach((pair) => {
+        const index = pair.indexOf("=");
+        if (index === -1) return;
+        const key = pair.slice(0, index).trim();
+        const value = pair.slice(index + 1).trim();
+        if (!key) return;
+        parsed[key] = decodeURIComponent(value || "");
+    });
+
+    return parsed;
 }
 
 function ifJSON(str) {
